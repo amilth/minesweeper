@@ -59,32 +59,6 @@ impl Display for Minesweeper {
                         }
                     },
                 };
-
-                // if field.status == FieldStatus::Flag {
-                //     f.write_str("🚩 ")?;
-                // } else if (field.status == FieldStatus::Closed) {
-                //     f.write_str("🟪 ")?;
-                // } else if field.mine_info == MineInfo::Mine {
-                //     f.write_str("💣 ")?;
-                // } else {
-
-                //     // let x = field.mine_info
-                // }
-
-                // if self.flagged_fields.contains(&pos) {
-                //     f.write_str("🚩 ")?;
-                // } else if !self.open_fields.contains(&pos) {
-                //     f.write_str("🟪 ")?;
-                // } else if self.mines.contains(&pos) {
-                //     f.write_str("💣 ")?;
-                // } else {
-                //     let neighbor_count = self.neighboring_mines(pos);
-                //     if neighbor_count == 0 {
-                //         f.write_str("   ")?;
-                //     } else {
-                //         f.write_fmt(format_args!(" {} ", neighbor_count))?;
-                //     }
-                // }
             }
             f.write_str("\n")?;
         }
