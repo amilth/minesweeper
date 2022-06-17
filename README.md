@@ -1,3 +1,3 @@
 # Minesweeper
 
-Creating minesweeper as a learning experience.
+Creating a minesweeper game as a learning experience.
