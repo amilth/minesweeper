@@ -1,7 +1,7 @@
 use rand::{thread_rng, Rng};
 use std::{
-    collections::{HashMap, HashSet},
-    fmt::{Display, Formatter, Result},
+    collections::HashMap,
+    fmt::{Display, Error, Formatter, Result},
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -17,13 +17,13 @@ pub struct Field {
     status: FieldStatus,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum MineInfo {
     Mine,
     NeighboringMines(u8),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum FieldStatus {
     Open,
     Closed,
@@ -45,22 +45,20 @@ impl Display for Minesweeper {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         for y in 0..self.height {
             for x in 0..self.width {
-                let pos = (x, y);
+                let pos = &Position { x, y };
+                let field = self.fields.get(pos).ok_or(Error)?;
 
-                if self.flagged_fields.contains(&pos) {
-                    f.write_str("🚩 ")?;
-                } else if !self.open_fields.contains(&pos) {
-                    f.write_str("🟪 ")?;
-                } else if self.mines.contains(&pos) {
-                    f.write_str("💣 ")?;
-                } else {
-                    let neighbor_count = self.neighboring_mines(pos);
-                    if neighbor_count == 0 {
-                        f.write_str("   ")?;
-                    } else {
-                        f.write_fmt(format_args!(" {} ", neighbor_count))?;
-                    }
-                }
+                match field.status {
+                    FieldStatus::Flag => f.write_str("🚩 ")?,
+                    FieldStatus::Closed => f.write_str("🟪 ")?,
+                    FieldStatus::Open => match field.mine_info {
+                        MineInfo::Mine => f.write_str("💣 ")?,
+                        MineInfo::NeighboringMines(0) => f.write_str("   ")?,
+                        MineInfo::NeighboringMines(mine_count) => {
+                            f.write_fmt(format_args!(" {} ", mine_count))?
+                        }
+                    },
+                };
             }
             f.write_str("\n")?;
         }
@@ -190,7 +188,6 @@ mod tests {
 
         // ms.open((5, 5));
         // ms.toggle_flag((6, 6));
-
         println!("{}", ms);
     }
 }
