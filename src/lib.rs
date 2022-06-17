@@ -104,8 +104,6 @@ impl Minesweeper {
                         _ => {
                             field.mine_info = MineInfo::Mine;
                             mines_added += 1;
-
-                            fields.get_mut(&Position { x: 1, y: 1 });
                         }
                     }
                 }
