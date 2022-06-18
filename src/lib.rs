@@ -17,7 +17,7 @@ pub struct Field {
     status: FieldStatus,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum MineInfo {
     Mine,
     NeighboringMines(u8),
@@ -68,7 +68,7 @@ impl Display for Minesweeper {
 
 impl Minesweeper {
     pub fn new(width: usize, height: usize, mine_count: usize) -> Minesweeper {
-        Minesweeper {
+        let mut ms = Minesweeper {
             height,
             width,
             fields: {
@@ -110,7 +110,23 @@ impl Minesweeper {
 
                 fields
             },
+        };
+
+        // Set neighboring mines
+        for y in 0..height {
+            for x in 0..width {
+                let position = Position { x, y };
+                let neighboring_mines = ms.neighboring_mines(position);
+                let mut field = ms.fields.get_mut(&position).unwrap();
+
+                if let MineInfo::NeighboringMines(0) = field.mine_info {
+                    field.mine_info = MineInfo::NeighboringMines(neighboring_mines);
+                }
+            }
         }
+
+        return ms;
+
         // Minesweeper {
         //     width,
         //     height,
@@ -134,36 +150,36 @@ impl Minesweeper {
         // }
     }
 
-    // pub fn iter_neighbors(&self, (x, y): Field) -> impl Iterator<Item = Field> {
-    //     let width = self.width;
-    //     let height = self.height;
+    pub fn iter_neighbors(&self, pos: Position) -> impl Iterator<Item = Position> {
+        let x = pos.x;
+        let y = pos.y;
+        let width = self.width;
+        let height = self.height;
 
-    //     (x.max(1) - 1..=(x + 1).min(width - 1))
-    //         .flat_map(move |i| (y.max(1) - 1..=(y + 1).min(height - 1)).map(move |j| (i, j)))
-    //         .filter(move |&pos| pos != (x, y))
-    // }
+        (x.max(1) - 1..=(x + 1).min(width - 1))
+            .flat_map(move |i| (y.max(1) - 1..=(y + 1).min(height - 1)).map(move |j| (i, j)))
+            .filter(move |&pos| pos != (x, y))
+            .map(|(x, y)| Position { x, y })
+    }
 
-    // pub fn neighboring_mines(&self, pos: Field) -> u8 {
-    //     self.iter_neighbors(pos)
-    //         .filter(|pos| self.mines.contains(pos))
-    //         .count() as u8
-    // }
+    pub fn neighboring_mines(&self, pos: Position) -> u8 {
+        self.iter_neighbors(pos)
+            .flat_map(|pos| self.fields.get(&pos))
+            .filter(|&field| field.mine_info == MineInfo::Mine)
+            .count() as u8
+    }
 
-    // pub fn open(&mut self, pos: Field) -> Option<MineInfo> {
-    //     if self.flagged_fields.contains(&pos) {
-    //         return None;
-    //     }
+    pub fn open(&mut self, pos: Position) -> Option<MineInfo> {
+        let mut field = self.fields.get_mut(&pos)?;
 
-    //     self.open_fields.insert(pos);
-
-    //     let is_mine = self.mines.contains(&pos);
-
-    //     if is_mine {
-    //         Some(MineInfo::Mine)
-    //     } else {
-    //         Some(MineInfo::NeighboringMines(self.neighboring_mines(pos)))
-    //     }
-    // }
+        match field.status {
+            FieldStatus::Open | FieldStatus::Flag => None,
+            FieldStatus::Closed => {
+                field.status = FieldStatus::Open;
+                Some(field.mine_info.clone())
+            }
+        }
+    }
 
     // pub fn toggle_flag(&mut self, pos: Field) {
     //     if self.open_fields.contains(&pos) {
@@ -180,13 +196,13 @@ impl Minesweeper {
 
 #[cfg(test)]
 mod tests {
-    use crate::Minesweeper;
+    use crate::{Minesweeper, Position};
 
     #[test]
     fn test() {
-        let mut ms = Minesweeper::new(10, 10, 5);
+        let mut ms = Minesweeper::new(10, 10, 10);
 
-        // ms.open((5, 5));
+        ms.open(Position { x: 6, y: 6 });
         // ms.toggle_flag((6, 6));
         println!("{}", ms);
     }
